@@ -32,8 +32,8 @@ from econml.dr import LinearDRLearner, ForestDRLearner, DRLearner
 from econml.orf import DMLOrthoForest
 
 # ML model imports for nuisance functions
-from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor
-from sklearn.linear_model import LassoCV, ElasticNetCV, RidgeCV
+from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor, RandomForestClassifier
+from sklearn.linear_model import LassoCV, ElasticNetCV, RidgeCV, LogisticRegressionCV
 from sklearn.preprocessing import PolynomialFeatures, StandardScaler
 from sklearn.model_selection import train_test_split
 from sklearn.pipeline import Pipeline
@@ -133,8 +133,8 @@ class EconMLElasticityEstimator:
         
         Y, T, X, Z, W = self.prepare_variables()
         
-        # Use only own price for simplicity in this example - ensure 1D
-        T_own = T[:, 0].ravel()
+        # Use only own price for simplicity in this example - ensure 2D for DML
+        T_own = T[:, 0].reshape(-1, 1)
         
         # Split data
         X_train, X_test, T_train, T_test, Y_train, Y_test = train_test_split(
@@ -143,29 +143,20 @@ class EconMLElasticityEstimator:
         
         results = {}
         
-        # 1. Linear DML with XGBoost for nuisance functions
-        print("\n1.1 Linear DML with XGBoost nuisances:")
+        # 1. Linear DML with sklearn models for nuisance functions
+        print("\n1.1 Linear DML with sklearn models:")
         print("-" * 40)
         
-        model_y = xgb.XGBRegressor(
-            n_estimators=100,
-            max_depth=5,
-            learning_rate=0.1,
-            random_state=42
-        )
-        
-        model_t = xgb.XGBRegressor(
-            n_estimators=100,
-            max_depth=5,
-            learning_rate=0.1,
-            random_state=42
-        )
+        # Use Ridge models to avoid compatibility issues
+        from sklearn.linear_model import Ridge
+        model_y = Ridge(alpha=1.0)
+        model_t = Ridge(alpha=1.0)
         
         dml = LinearDML(
             model_y=model_y,
             model_t=model_t,
             discrete_treatment=False,
-            cv=5,
+            cv=3,  # Reduce CV folds
             random_state=42
         )
         
@@ -286,8 +277,8 @@ class EconMLElasticityEstimator:
         )
         
         # Use only own price and its instruments for simplicity - ensure 1D
-        T_own_train = T_train[:, 0].ravel()
-        T_own_test = T_test[:, 0].ravel()
+        T_own_train = T_train[:, 0].reshape(-1, 1)
+        T_own_test = T_test[:, 0].reshape(-1, 1)
         Z_own_train = Z_train[:, :2]  # Use cost shifters as instruments
         Z_own_test = Z_test[:, :2]
         
@@ -369,7 +360,7 @@ class EconMLElasticityEstimator:
         Y, T, X, Z, W = self.prepare_variables()
         
         # Use heterogeneity variables - ensure 1D
-        T_own = T[:, 0].ravel()
+        T_own = T[:, 0].reshape(-1, 1)
         
         # Split data
         X_train, X_test, T_train, T_test, Y_train, Y_test, W_train, W_test = train_test_split(
@@ -463,7 +454,7 @@ class EconMLElasticityEstimator:
         
         return results
     
-    def example_4_dr_learners(self) -> Dict:
+    def example_4_doubly_robust_learners(self) -> Dict:
         """
         Example 4: Doubly Robust Learners
         
@@ -616,13 +607,15 @@ class EconMLElasticityEstimator:
             # Outcome: quantity of product i - ensure 1D array
             Y = price_df[f'log_quantity_{prod_i}'].values.ravel()
             
-            # Treatment: all prices
+            # Treatment: all prices - ensure 2D array
             T = price_df[[f'log_price_{prod}' for prod in products]].values
             
             # Controls
             X = price_df[['income_level', 'population_density', 'week']].values
             
-            # Fit multi-treatment DML
+            print(f"  Product {prod_i}: Y shape {Y.shape}, T shape {T.shape}, X shape {X.shape}")
+            
+            # Use proper multi-treatment DML from EconML
             dml = LinearDML(
                 model_y=GradientBoostingRegressor(n_estimators=50, max_depth=3, random_state=42),
                 model_t=GradientBoostingRegressor(n_estimators=50, max_depth=3, random_state=42),
@@ -633,7 +626,7 @@ class EconMLElasticityEstimator:
             
             dml.fit(Y, T, X=X)
             
-            # Get elasticities
+            # Get elasticities for all products
             effects = dml.effect(X).mean(axis=0)
             elasticity_matrix[i, :] = effects
         
@@ -753,30 +746,25 @@ class EconMLElasticityEstimator:
             ax.set_title('Distribution of Heterogeneous Effects')
             ax.legend()
         else:
-            # Create mock data for demonstration
-            cate_mock = np.random.normal(-1.2, 0.3, 1000)
-            ax.hist(cate_mock, bins=30, alpha=0.7, color='blue')
-            ax.axvline(x=cate_mock.mean(), color='red', linestyle='--', label=f'Mean: {cate_mock.mean():.3f}')
-            ax.set_xlabel('CATE')
-            ax.set_ylabel('Frequency')
-            ax.set_title('Distribution of Heterogeneous Effects (Mock)')
-            ax.legend()
+            raise ValueError("No heterogeneous effects data available for visualization. Fix the underlying method to provide CATE data.")
         
         # Plot 3: Elasticity by income
         ax = axes[1, 0]
-        # Create mock income-based elasticities
-        income_levels = ['Low', 'Medium', 'High']
-        elasticities_income = [-1.35, -1.20, -1.05]
-        bars = ax.bar(income_levels, elasticities_income, alpha=0.7, 
-                     color=['#ff9999', '#66b3ff', '#99ff99'])
-        ax.set_ylabel('Elasticity')
-        ax.set_title('Elasticity by Income Level')
-        ax.axhline(y=-1.2, color='r', linestyle='--', alpha=0.5)
-        
-        # Add value labels
-        for bar, el in zip(bars, elasticities_income):
-            ax.text(bar.get_x() + bar.get_width()/2, bar.get_height() - 0.05,
-                    f'{el:.3f}', ha='center', va='top')
+        if income_elasticities is not None and len(income_elasticities) > 0:
+            income_levels = list(income_elasticities.keys())
+            elasticities_income = list(income_elasticities.values())
+            bars = ax.bar(income_levels, elasticities_income, alpha=0.7, 
+                         color=['#ff9999', '#66b3ff', '#99ff99'])
+            ax.set_ylabel('Elasticity')
+            ax.set_title('Elasticity by Income Level')
+            ax.axhline(y=-1.2, color='r', linestyle='--', alpha=0.5)
+            
+            # Add value labels
+            for bar, el in zip(bars, elasticities_income):
+                ax.text(bar.get_x() + bar.get_width()/2, bar.get_height() - 0.05,
+                        f'{el:.3f}', ha='center', va='top')
+        else:
+            raise ValueError("No income-based elasticity data available for visualization. Fix the underlying method to provide income_elasticities data.")
         
         # Plot 4: Confidence intervals
         ax = axes[1, 1]
@@ -793,18 +781,7 @@ class EconMLElasticityEstimator:
             ax.axhline(y=-1.2, color='r', linestyle='--', alpha=0.5)
             ax.grid(True, alpha=0.3)
         else:
-            # Mock confidence intervals
-            methods_mock = ['DML', 'IV', 'CF', 'DR']
-            elasticities_mock = [-1.25, -1.18, -1.22, -1.15]
-            errors_mock = [0.05, 0.08, 0.12, 0.06]
-            ax.errorbar(range(len(methods_mock)), elasticities_mock, 
-                        yerr=errors_mock, fmt='o', capsize=5, capthick=2)
-            ax.set_xticks(range(len(methods_mock)))
-            ax.set_xticklabels(methods_mock)
-            ax.set_ylabel('Elasticity')
-            ax.set_title('Confidence Intervals (Mock)')
-            ax.axhline(y=-1.2, color='r', linestyle='--', alpha=0.5)
-            ax.grid(True, alpha=0.3)
+            raise ValueError("No confidence interval data available for visualization. Fix the underlying method to provide methods, elasticities, ci_lower, and ci_upper data.")
         
         plt.tight_layout()
         plt.savefig('econml_results.png', dpi=300, bbox_inches='tight')

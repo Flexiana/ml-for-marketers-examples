@@ -712,30 +712,7 @@ class MLPipelineElasticityEstimator:
                 ax.set_title('Heterogeneous Effects by Subgroup')
                 ax.axvline(x=-1.2, color='r', linestyle='--', alpha=0.5)
         else:
-            # Create a feature importance plot as fallback
-            if 'xgboost' in results and 'feature_importance' in results['xgboost']:
-                importance = results['xgboost']['feature_importance']
-                # Get top 10 features
-                top_indices = np.argsort(importance)[-10:]
-                top_importance = importance[top_indices]
-                feature_names = [f'Feature_{i}' for i in top_indices]
-                
-                ax.barh(range(len(feature_names)), top_importance)
-                ax.set_yticks(range(len(feature_names)))
-                ax.set_yticklabels(feature_names)
-                ax.set_xlabel('Importance')
-                ax.set_title('Top 10 Feature Importance (XGBoost)')
-            else:
-                # Mock heterogeneity data
-                groups = ['Low Income', 'Medium Income', 'High Income', 'Urban', 'Rural']
-                values = [-1.35, -1.20, -1.05, -1.25, -1.15]
-                
-                ax.barh(range(len(groups)), values, alpha=0.7)
-                ax.set_yticks(range(len(groups)))
-                ax.set_yticklabels(groups)
-                ax.set_xlabel('Elasticity')
-                ax.set_title('Heterogeneous Effects by Subgroup (Mock)')
-                ax.axvline(x=-1.2, color='r', linestyle='--', alpha=0.5)
+            raise ValueError("No heterogeneous effects data available for visualization. Fix the underlying method to provide subgroup_effects data.")
         
         plt.tight_layout()
         plt.savefig('ml_dml_results.png', dpi=300, bbox_inches='tight')
