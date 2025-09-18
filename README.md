@@ -15,9 +15,25 @@ This project implements working examples for cross-price elasticity estimation u
 
 ## Installation
 
+**Recommended: Use a clean virtual environment to avoid dependency conflicts**
+
 ```bash
-# Install all required packages
+# Create virtual environment
+python -m venv elasticity_env
+
+# Activate environment
+source elasticity_env/bin/activate  # On macOS/Linux
+# OR
+elasticity_env\Scripts\activate     # On Windows
+
+# Install packages
 pip install -r requirements.txt
+```
+
+**Quick activation (after setup):**
+```bash
+# Use the provided script
+source activate_env.sh
 ```
 
 ## Quick Start
