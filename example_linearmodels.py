@@ -20,7 +20,8 @@ Panel data methods are crucial for elasticity estimation because they:
 import numpy as np
 import pandas as pd
 from linearmodels import PanelOLS, FirstDifferenceOLS, RandomEffects, BetweenOLS, PooledOLS
-from linearmodels.panel import PanelData, compare
+from linearmodels.panel.data import PanelData
+from linearmodels.panel import compare
 from linearmodels.iv import IV2SLS, IVGMM, IVGMMCUE, IVLIML
 from typing import Dict, Tuple, Optional
 import warnings

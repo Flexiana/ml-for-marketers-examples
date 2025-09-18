@@ -388,7 +388,6 @@ class EconMLElasticityEstimator:
             max_depth=10,
             model_Y=RandomForestRegressor(n_estimators=100, max_depth=5, random_state=42),
             model_T=RandomForestRegressor(n_estimators=100, max_depth=5, random_state=42),
-            cv=3,
             random_state=42
         )
         

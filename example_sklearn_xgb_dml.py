@@ -346,7 +346,7 @@ class MLPipelineElasticityEstimator:
         
         # Cross-fitting
         n_folds = 5
-        kf = KFold(n_splits=n_folds, shuffle=True, random_seed=42)
+        kf = KFold(n_splits=n_folds, shuffle=True, random_state=42)
         
         Y_residuals = np.zeros_like(Y)
         T_residuals = np.zeros_like(T)
