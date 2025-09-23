@@ -99,8 +99,8 @@ class PanelElasticityEstimator:
         print("-" * 40)
         
         mod_fe = PanelOLS(
-            panel.log_quantity,
-            panel[['log_price', 'log_avg_competitor_price', 'promotion']]
+            panel.dataframe['log_quantity'],
+            panel.dataframe[['log_price', 'log_avg_competitor_price', 'promotion']]
         )
         
         fe_results = mod_fe.fit(cov_type='clustered', cluster_entity=True)
@@ -125,8 +125,8 @@ class PanelElasticityEstimator:
         print("-" * 40)
         
         mod_twoway = PanelOLS(
-            panel.log_quantity,
-            panel[['log_price', 'log_avg_competitor_price', 'promotion']],
+            panel.dataframe['log_quantity'],
+            panel.dataframe[['log_price', 'log_avg_competitor_price', 'promotion']],
             entity_effects=True,
             time_effects=True
         )
@@ -148,8 +148,8 @@ class PanelElasticityEstimator:
         fd_data = self.df[['d_log_quantity', 'd_log_price']].dropna()
         
         mod_fd = FirstDifferenceOLS(
-            panel.log_quantity,
-            panel[['log_price', 'log_avg_competitor_price', 'promotion']]
+            panel.dataframe['log_quantity'],
+            panel.dataframe[['log_price', 'log_avg_competitor_price', 'promotion']]
         )
         
         fd_results = mod_fd.fit(cov_type='clustered', cluster_entity=True)
@@ -165,8 +165,8 @@ class PanelElasticityEstimator:
         print("-" * 40)
         
         mod_re = RandomEffects(
-            panel.log_quantity,
-            panel[['log_price', 'log_avg_competitor_price', 'promotion']]
+            panel.dataframe['log_quantity'],
+            panel.dataframe[['log_price', 'log_avg_competitor_price', 'promotion']]
         )
         
         re_results = mod_re.fit(cov_type='clustered', cluster_entity=True)
@@ -364,8 +364,8 @@ class PanelElasticityEstimator:
         print("-" * 40)
         
         mod_dynamic = PanelOLS(
-            panel.log_quantity,
-            panel[['lag_log_quantity', 'log_price', 'log_avg_competitor_price', 'promotion']]
+            panel.dataframe['log_quantity'],
+            panel.dataframe[['lag_log_quantity', 'log_price', 'log_avg_competitor_price', 'promotion']]
         )
         
         dynamic_results = mod_dynamic.fit(cov_type='clustered', cluster_entity=True)
@@ -588,8 +588,8 @@ class PanelElasticityEstimator:
         # 1. Pooled OLS
         print("\n5.1 Pooled OLS:")
         mod_pooled = PooledOLS(
-            panel.log_quantity,
-            panel[['log_price', 'log_avg_competitor_price', 'promotion']]
+            panel.dataframe['log_quantity'],
+            panel.dataframe[['log_price', 'log_avg_competitor_price', 'promotion']]
         )
         pooled_res = mod_pooled.fit(cov_type='clustered', cluster_entity=True)
         models['Pooled OLS'] = pooled_res
@@ -597,8 +597,8 @@ class PanelElasticityEstimator:
         # 2. Between Effects
         print("\n5.2 Between Effects:")
         mod_between = BetweenOLS(
-            panel.log_quantity,
-            panel[['log_price', 'log_avg_competitor_price', 'promotion']]
+            panel.dataframe['log_quantity'],
+            panel.dataframe[['log_price', 'log_avg_competitor_price', 'promotion']]
         )
         between_res = mod_between.fit(cov_type='robust')
         models['Between'] = between_res
@@ -606,8 +606,8 @@ class PanelElasticityEstimator:
         # 3. Fixed Effects
         print("\n5.3 Fixed Effects:")
         mod_fe = PanelOLS(
-            panel.log_quantity,
-            panel[['log_price', 'log_avg_competitor_price', 'promotion']]
+            panel.dataframe['log_quantity'],
+            panel.dataframe[['log_price', 'log_avg_competitor_price', 'promotion']]
         )
         fe_res = mod_fe.fit(cov_type='clustered', cluster_entity=True)
         models['Fixed Effects'] = fe_res
@@ -615,8 +615,8 @@ class PanelElasticityEstimator:
         # 4. Random Effects
         print("\n5.4 Random Effects:")
         mod_re = RandomEffects(
-            panel.log_quantity,
-            panel[['log_price', 'log_avg_competitor_price', 'promotion']]
+            panel.dataframe['log_quantity'],
+            panel.dataframe[['log_price', 'log_avg_competitor_price', 'promotion']]
         )
         re_res = mod_re.fit(cov_type='clustered', cluster_entity=True)
         models['Random Effects'] = re_res
@@ -624,8 +624,8 @@ class PanelElasticityEstimator:
         # 5. First Differences
         print("\n5.5 First Differences:")
         mod_fd = FirstDifferenceOLS(
-            panel.log_quantity,
-            panel[['log_price', 'log_avg_competitor_price', 'promotion']]
+            panel.dataframe['log_quantity'],
+            panel.dataframe[['log_price', 'log_avg_competitor_price', 'promotion']]
         )
         fd_res = mod_fd.fit(cov_type='clustered', cluster_entity=True)
         models['First Diff'] = fd_res

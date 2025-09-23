@@ -1,0 +1,10 @@
+# CLI Requirements for Elasticity Analysis Tools
+# Install with: pip install -r requirements_cli.txt
+
+# Core dependencies (already in main requirements.txt)
+-r requirements.txt
+
+# CLI-specific dependencies
+rich>=13.0.0
+colorama>=0.4.6
+click>=8.0.0
