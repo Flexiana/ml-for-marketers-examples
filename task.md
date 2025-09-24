@@ -4,6 +4,28 @@
 
 You will build a web application that exposes cross-price elasticity estimation functionality from our [ml-for-marketers-examples](https://github.com/Flexiana/ml-for-marketers-examples) repository. The application should allow users to upload retail data, estimate price elasticities using machine learning methods, and visualize results through an intuitive interface.
 
+## What You're Building: A Quick Introduction
+
+**What is Price Elasticity?** Price elasticity measures how much consumer demand changes when prices change. For example, if the price of coffee increases by 10% and demand drops by 15%, the price elasticity is -1.5. Cross-price elasticity measures how demand for one product (like tea) changes when the price of another product (like coffee) changes. This is crucial for businesses to understand substitution patterns, set optimal pricing strategies, and predict market responses to price changes.
+
+**What is the AIDS Model?** The Almost Ideal Demand System (AIDS) is an econometric model that estimates complete demand relationships between multiple products simultaneously. Instead of analyzing products one-by-one, AIDS models the entire market as a system where all products interact with each other. It provides three types of elasticities: Marshallian (how demand changes with price, holding income constant), Hicksian (how demand changes with price, holding utility constant), and expenditure elasticities (how demand changes with income). The model also checks theoretical restrictions like "adding-up" (all expenditure shares must sum to 100%) and "homogeneity" (doubling all prices should halve real demand).
+
+**Why This Matters for Business** Understanding price elasticities helps companies make data-driven decisions about pricing, product positioning, and market strategy. For example, if two products have high positive cross-price elasticity, they're substitutes - raising the price of one will increase demand for the other. If they have negative cross-price elasticity, they're complements - raising the price of one will decrease demand for both. This web application makes these complex econometric analyses accessible to business users through an intuitive interface.
+
+**What Happens in Example 1 (Linear AIDS)?** The Linear Approximate AIDS model works in several key steps that you'll implement in your backend:
+
+1. **Data Preparation**: The model takes retail data with expenditure shares (what percentage of total spending goes to each product), prices, and total expenditure across different stores and time periods. It calculates log prices and creates matrices for all products.
+
+2. **Stone's Price Index**: Instead of using complex price indices, it uses Stone's approximation: log(P) = Σ(share_i × log(price_i)) for all products. This creates a "basket price" that represents the overall cost of living.
+
+3. **Real Expenditure**: It calculates log(real_expenditure) = log(total_expenditure) - log(price_index), which represents purchasing power after accounting for price changes.
+
+4. **Share Equations**: For each product (except one), it runs a regression: share_i = α_i + Σ(γ_ij × log(price_j)) + β_i × log(real_expenditure). The α_i is the base share, γ_ij captures price effects, and β_i captures income effects.
+
+5. **Adding-Up Constraint**: The last product's parameters are calculated so all shares sum to 100%: α_last = 1 - Σ(α_i), γ_last = -Σ(γ_i), β_last = -Σ(β_i).
+
+6. **Elasticity Calculation**: Finally, it converts the estimated parameters into elasticities using formulas that account for the relationships between all products in the system.
+
 ## Repository Context
 
 Our repository contains state-of-the-art methods for cross-price elasticity estimation using:
@@ -32,12 +54,15 @@ POST /api/upload-data
 - Return data summary and validation results
 
 POST /api/estimate-elasticities
-- Run elasticity estimation (look at example_statsmodels_aids.py Example 1)
-- Return elasticity matrix
+- Run AIDS estimation (look at example_statsmodels_aids.py Example 1)
+- Return elasticity matrices (Marshallian, Hicksian, Expenditure)
+- Return parameter estimates (alpha, beta, gamma coefficients)
+- Return theoretical restrictions check results
 - Store the results in the database
 
 GET /api/elasticity-matrix/{estimation_id}
-- Retrieve previously computed elasticity matrix and return it
+- Retrieve previously computed elasticity matrices and parameters
+- Return complete AIDS estimation results
 
 GET /api/health
 - Health check endpoint
@@ -65,22 +90,19 @@ store_id,date,total_expenditure,income_level,avg_price_chips,avg_price_chocolate
 **Main Dashboard:**
 - File upload area for CSV data
 - Data preview table (first 10 rows)
-- Parameter configuration panel
 - Results visualization area
 
 **Key Features:**
 - **Data Upload**: Drag-and-drop CSV upload with validation
-- **Parameter Selection**: 
-  - Choose product categories
-  - Select time period range
-  - Set confidence level (90%, 95%, 99%)
 - **Results Display**:
-  - Elasticity matrix heatmap
-  - Confidence intervals table
+  - Elasticity matrix heatmap (Marshallian, Hicksian, Expenditure)
+  - Parameter estimates table (alpha, beta, gamma coefficients)
+  - Theoretical restrictions check (adding-up, homogeneity, symmetry)
   - Download results as CSV/JSON
 - **Visualizations**:
-  - Price vs Quantity scatter plots
-  - Elasticity bar charts
+  - Expenditure shares pie chart
+  - Elasticity matrix heatmap with color coding
+  - Expenditure elasticities bar chart
   - Cross-price elasticity network diagram
 
 **UI Requirements:**
